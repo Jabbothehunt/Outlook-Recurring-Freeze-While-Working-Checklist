@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Outlook Recurring Freeze - While It's Working (Troubleshooting Checklist)</title>
+  <style>
+    body { font-family: Arial, Helvetica, sans-serif; margin: 18px; line-height: 1.35; }
+    h1 { font-size: 20px; margin: 0 0 6px; }
+    .meta { font-size: 13px; color: #333; margin-bottom: 14px; }
+    .card { border: 1px solid #ddd; border-radius: 10px; padding: 12px 14px; margin: 12px 0; }
+    details { border: 1px solid #e5e5e5; border-radius: 10px; padding: 10px 12px; margin: 10px 0; }
+    details[open] { background: #fafafa; }
+    summary { cursor: pointer; font-weight: 700; }
+    .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+    label { font-weight: 600; }
+    select, input[type="text"] { padding: 8px; border: 1px solid #ccc; border-radius: 8px; }
+    .btns { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
+    button { padding: 10px 12px; border: 1px solid #777; border-radius: 10px; background: #fff; cursor: pointer; }
+    button:hover { background: #f3f3f3; }
+    ul { margin: 8px 0 0 18px; }
+    li { margin: 6px 0; }
+    .item { display: flex; gap: 8px; align-items: flex-start; }
+    .item input { margin-top: 3px; }
+    .hint { font-size: 12px; color: #444; margin-top: 6px; }
+    textarea { width: 100%; min-height: 90px; padding: 10px; border: 1px solid #ccc; border-radius: 10px; }
+    .small { font-size: 12px; color: #444; }
+    .pill { display:inline-block; padding:2px 8px; border:1px solid #ccc; border-radius:999px; font-size:12px; margin-left:6px; }
+    code { background:#f2f2f2; padding: 1px 6px; border-radius: 6px; }
+    .warn { border-left: 5px solid #f0b429; padding: 8px 10px; background: #fff7e6; border-radius: 8px; margin-top: 10px; }
+    .ok { border-left: 5px solid #2d9a4a; padding: 8px 10px; background: #eefaf1; border-radius: 8px; margin-top: 10px; }
+    .cmd { font-family: Consolas, "Courier New", monospace; background:#f2f2f2; padding: 8px 10px; border-radius: 10px; overflow-x:auto; }
+  </style>
+</head>
+<body>
+  <h1>Outlook Recurring Freezes — Troubleshoot While It’s Working</h1>
+  <div class="meta">
+    Use this when Outlook is <b>currently working</b> but the issue is recurring. Check items as you go — progress saves in this browser.
+    <span class="pill">Drop-down + Reset</span>
+  </div>
+
+  <div class="card">
+    <div class="row">
+      <label for="scenario">Drop-down: pick the recurring symptom</label>
+      <select id="scenario">
+        <option value="">-- Select --</option>
+        <option>Recurring: Outlook freezes and must be ended in Task Manager</option>
+        <option>Recurring: Outlook slow / intermittent “Not Responding”</option>
+        <option>Recurring: Search slow or not returning results</option>
+        <option>Recurring: Freezes when opening email/attachments</option>
+        <option>Recurring: Freezes when using shared mailbox/calendar</option>
+        <option>Recurring: Freezes after updates/reboots</option>
+      </select>
+      <span class="small" id="scenarioSave"></span>
+    </div>
+    <div class="ok">
+      <b>Goal:</b> Identify the root cause (add-in, OST/profile corruption, shared mailbox caching, mailbox size, indexing, or connectivity).
+    </div>
+    <div class="warn">
+      <b>Tip:</b> If the user can work in <b>OWA</b> (web mail) while Outlook freezes, the problem is usually local (profile/OST/add-ins).
+    </div>
+  </div>
+
+  <details open>
+    <summary>1) Add-ins Check (most common)</summary>
+    <ul>
+      <li class="item"><input type="checkbox" data-k="addin1"><div>Outlook → <b>File</b> → <b>Options</b> → <b>Add-ins</b>.</div></li>
+      <li class="item"><input type="checkbox" data-k="addin2"><div>Manage: <b>COM Add-ins</b> → <b>Go</b> → review list.</div></li>
+      <li class="item"><input type="checkbox" data-k="addin3"><div>Disable anything not required (common: Adobe PDF, Teams/Zoom, CRM, antivirus mail scanning) and test.</div></li>
+      <li class="item"><input type="checkbox" data-k="addin4"><div>Check <b>Disabled Items</b> (Outlook may have disabled a crashing add-in).</div></li>
+    </ul>
+    <div class="hint">If Safe Mode works, it’s almost always add-ins: Win+R → <code>outlook.exe /safe</code></div>
+  </details>
+
+  <details>
+    <summary>2) Mailbox Size / Shared Mailboxes</summary>
+    <ul>
+      <li class="item"><input type="checkbox" data-k="mbx1"><div>Check mailbox folder size: Right-click mailbox → <b>Data File Properties</b> → <b>Folder Size</b>.</div></li>
+      <li class="item"><input type="checkbox" data-k="mbx2"><div>Note if mailbox is very large (example: 10–15GB+), or user has many folders / shared mailboxes.</div></li>
+      <li class="item"><input type="checkbox" data-k="mbx3"><div>Check shared mailbox caching: File → Account Settings → Account Settings → double-click mailbox → More Settings → Advanced.</div></li>
+      <li class="item"><input type="checkbox" data-k="mbx4"><div>Consider unchecking: <b>Download shared folders</b> (if many shared mailboxes cause freezes).</div></li>
+    </ul>
+  </details>
+
+  <details>
+    <summary>3) OST Size & Health (cache corruption)</summary>
+    <div class="hint">This is one of the best “while it’s working” checks.</div>
+    <ul>
+      <li class="item"><input type="checkbox" data-k="ost1"><div>Win+R → <code>%LOCALAPPDATA%\Microsoft\Outlook</code></div></li>
+      <li class="item"><input type="checkbox" data-k="ost2"><div>Check the user’s <code>.ost</code> file size (very large OSTs can cause hangs).</div></li>
+      <li class="item"><input type="checkbox" data-k="ost3"><div>If recurring freezes continue, plan to <b>rebuild OST</b> (close Outlook, rename OST to .old, reopen Outlook).</div></li>
+    </ul>
+    <div class="cmd">Rebuild OST (later, if needed): Close Outlook → %LOCALAPPDATA%\Microsoft\Outlook → rename mailbox.ost to mailbox.old → reopen Outlook</div>
+  </details>
+
+  <details>
+    <summary>4) Indexing / Search Health</summary>
+    <ul>
+      <li class="item"><input type="checkbox" data-k="idx1"><div>Outlook → click Search bar → <b>Search Tools</b> → <b>Indexing Status</b>.</div></li>
+      <li class="item"><input type="checkbox" data-k="idx2"><div>If stuck or high items remaining for a long time, rebuild index: Control Panel → <b>Indexing Options</b> → <b>Advanced</b> → <b>Rebuild</b>.</div></li>
+      <li class="item"><input type="checkbox" data-k="idx3"><div>Confirm Windows Search service is running (services.msc → Windows Search).</div></li>
+    </ul>
+  </details>
+
+  <details>
+    <summary>5) Connection Status / Reconnect Loops</summary>
+    <ul>
+      <li class="item"><input type="checkbox" data-k="conn1"><div>Hold <b>Ctrl</b> and right-click the Outlook tray icon → <b>Connection Status</b>.</div></li>
+      <li class="item"><input type="checkbox" data-k="conn2"><div>Look for repeated disconnect/reconnect patterns or many failing connections.</div></li>
+      <li class="item"><input type="checkbox" data-k="conn3"><div>If using VPN/Zscaler, test briefly on/off (per policy) to see if it correlates with freezes.</div></li>
+    </ul>
+  </details>
+
+  <details>
+    <summary>6) Event Viewer (find the real offender)</summary>
+    <ul>
+      <li class="item"><input type="checkbox" data-k="ev1"><div>Open <b>Event Viewer</b> → Windows Logs → <b>Application</b>.</div></li>
+      <li class="item"><input type="checkbox" data-k="ev2"><div>Filter or scan for errors around the freeze time (sources: Outlook, Office, Application Error, Microsoft 365 Apps).</div></li>
+      <li class="item"><input type="checkbox" data-k="ev3"><div>Capture faulting module/add-in name if present (very useful for permanent fix).</div></li>
+    </ul>
+  </details>
+
+  <details>
+    <summary>7) Updates / Repair (when recurring)</summary>
+    <ul>
+      <li class="item"><input type="checkbox" data-k="up1"><div>Outlook → File → Office Account → <b>Update Options</b> → <b>Update Now</b>.</div></li>
+      <li class="item"><input type="checkbox" data-k="up2"><div>If still recurring: run <b>Office Quick Repair</b> (Settings → Apps → Microsoft 365 → Modify → Quick Repair).</div></li>
+      <li class="item"><input type="checkbox" data-k="up3"><div>If still not fixed: consider <b>Online Repair</b> (last resort).</div></li>
+    </ul>
+  </details>
+
+  <details open>
+    <summary>8) Notes / Ticket Documentation</summary>
+    <div class="hint">Log what you found while it’s working (add-in list, OST size, shared mailbox count, errors, etc.).</div>
+    <textarea id="notes" placeholder="Example: Outlook recovered after ending OUTLOOK.EXE. Checked COM add-ins (disabled Adobe PDFMaker). OST size 22GB. User has 4 shared mailboxes; disabled 'Download shared folders'. No further hangs during 10-min test."></textarea>
+  </details>
+
+  <div class="card">
+    <div class="btns">
+      <button id="printBtn" type="button">Print</button>
+      <button id="resetBtn" type="button">Reset (clear all checks & notes)</button>
+    </div>
+    <div class="hint">Printing tip: in the print dialog, choose “Save as PDF” if you want to attach to the ticket.</div>
+  </div>
+
+  <script>
+    const LS_KEY = "outlook_recurring_freeze_while_working_v1";
+
+    function loadState() {
+      try { return JSON.parse(localStorage.getItem(LS_KEY) || "{}"); } catch { return {}; }
+    }
+    function saveState(state) {
+      localStorage.setItem(LS_KEY, JSON.stringify(state));
+    }
+
+    const state = loadState();
+
+    // Checkboxes
+    document.querySelectorAll('input[type="checkbox"][data-k]').forEach(cb => {
+      const k = cb.getAttribute("data-k");
+      cb.checked = !!state[k];
+      cb.addEventListener("change", () => {
+        state[k] = cb.checked;
+        saveState(state);
+      });
+    });
+
+    // Dropdown
+    const scenario = document.getElementById("scenario");
+    const scenarioSave = document.getElementById("scenarioSave");
+    if (state.__scenario) scenario.value = state.__scenario;
+    scenarioSave.textContent = state.__scenario ? "Saved." : "";
+    scenario.addEventListener("change", () => {
+      state.__scenario = scenario.value;
+      scenarioSave.textContent = scenario.value ? "Saved." : "";
+      saveState(state);
+    });
+
+    // Notes
+    const notes = document.getElementById("notes");
+    if (state.__notes) notes.value = state.__notes;
+    notes.addEventListener("input", () => {
+      state.__notes = notes.value;
+      saveState(state);
+    });
+
+    // Print
+    document.getElementById("printBtn").addEventListener("click", () => window.print());
+
+    // Reset
+    document.getElementById("resetBtn").addEventListener("click", () => {
+      if (!confirm("Clear all checkboxes, dropdown selection, and notes?")) return;
+      localStorage.removeItem(LS_KEY);
+      document.querySelectorAll('input[type="checkbox"][data-k]').forEach(cb => cb.checked = false);
+      scenario.value = "";
+      scenarioSave.textContent = "";
+      notes.value = "";
+    });
+  </script>
+</body>
+</html>
